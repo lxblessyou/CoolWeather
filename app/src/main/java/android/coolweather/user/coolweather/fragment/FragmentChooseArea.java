@@ -1,7 +1,9 @@
 package android.coolweather.user.coolweather.fragment;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.coolweather.user.coolweather.R;
+import android.coolweather.user.coolweather.activity.ActivityWeather;
 import android.coolweather.user.coolweather.db.City;
 import android.coolweather.user.coolweather.db.County;
 import android.coolweather.user.coolweather.db.Province;
@@ -115,6 +117,14 @@ public class FragmentChooseArea extends Fragment {
                         selectedCity = cityList.get(position);
                         // 如果当前显示的列表等级为城市则读取县列表
                         queryCounty();
+                        break;
+                    case LEVEL_COUNTY:
+                        // 如果是在县列表里点击的成员，则跳转到 ActivityWeather 界面
+                        String weatherId = countyList.get(position).getWeatherId();
+                        Intent intent = new Intent(getActivity(), ActivityWeather.class);
+                        intent.putExtra("weather_id", weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
                         break;
                     default:
                         break;
