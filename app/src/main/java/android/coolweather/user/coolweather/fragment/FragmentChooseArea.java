@@ -3,6 +3,7 @@ package android.coolweather.user.coolweather.fragment;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.coolweather.user.coolweather.R;
+import android.coolweather.user.coolweather.activity.ActivityMain;
 import android.coolweather.user.coolweather.activity.ActivityWeather;
 import android.coolweather.user.coolweather.db.City;
 import android.coolweather.user.coolweather.db.County;
@@ -119,12 +120,21 @@ public class FragmentChooseArea extends Fragment {
                         queryCounty();
                         break;
                     case LEVEL_COUNTY:
-                        // 如果是在县列表里点击的成员，则跳转到 ActivityWeather 界面
                         String weatherId = countyList.get(position).getWeatherId();
-                        Intent intent = new Intent(getActivity(), ActivityWeather.class);
-                        intent.putExtra("weather_id", weatherId);
-                        startActivity(intent);
-                        getActivity().finish();
+                        // 通过 instanceof 判断 getActivity() 属于哪个 Activity
+                        if (getActivity() instanceof ActivityMain) {
+                            // 如果是在县列表里点击的成员，则跳转到 ActivityWeather 界面
+                            Intent intent = new Intent(getActivity(), ActivityWeather.class);
+                            intent.putExtra("weather_id", weatherId);
+                            startActivity(intent);
+                            getActivity().finish();
+                        } else if (getActivity() instanceof ActivityWeather) {
+                            // 如果是 ActivityWeather 实例
+                            ActivityWeather activity = (ActivityWeather) getActivity();
+                            activity.dl_drawer.closeDrawers();
+                            activity.srl_refresh.setRefreshing(true);
+                            activity.requestWeather(weatherId);
+                        }
                         break;
                     default:
                         break;
