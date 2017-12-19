@@ -1,9 +1,11 @@
 package android.coolweather.user.coolweather.activity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.coolweather.user.coolweather.R;
 import android.coolweather.user.coolweather.gson.DailyForecastBean;
 import android.coolweather.user.coolweather.gson.Weather;
+import android.coolweather.user.coolweather.service.AutoUpdateService;
 import android.coolweather.user.coolweather.util.HttpUtil;
 import android.coolweather.user.coolweather.util.JsonUtil;
 import android.graphics.Color;
@@ -201,42 +203,49 @@ public class ActivityWeather extends AppCompatActivity {
      * @param weather 天气对象
      */
     private void showWeatherInfo(Weather weather) {
-        // 1.标题和当前天气板块
-        String cityName = weather.getBasic().getCityName();
-        String updateLocTime = weather.getBasic().getUpdate().getUpdateLocTime();//.split(" ")[1];
-        String degree = weather.getNow().getTemperature() + "℃";
-        String weatherInfo = weather.getNow().getMore().getInfo();
-        tv_title_city.setText(cityName);
-        tv_title_update_time.setText(updateLocTime);
-        tv_degree.setText(degree);
-        tv_weather_info.setText(weatherInfo);
-        // 3.移除 预报 布局中中所有 View ，重新建立
-        ll_forecast.removeAllViews();
-        // 4.预报板块
-        for (DailyForecastBean forecast : weather.getForecastList()) {
-            View view = LayoutInflater.from(this).inflate(R.layout.layout_sub_forecast, ll_forecast, false);
-            TextView tv_date = (TextView) view.findViewById(R.id.tv_date);
-            TextView tv_info = (TextView) view.findViewById(R.id.tv_info);
-            TextView tv_max = (TextView) view.findViewById(R.id.tv_max);
-            TextView tv_min = (TextView) view.findViewById(R.id.tv_min);
-            tv_date.setText(forecast.getDate());
-            tv_info.setText(forecast.getMore().getInfo());
-            tv_max.setText(forecast.getTemperature().getMax() + "℃");
-            tv_min.setText(forecast.getTemperature().getMin() + "℃");
-            ll_forecast.addView(view);
+        if (weather != null && "ok".equals(weather.getStatus())) {
+            // 1.标题和当前天气板块
+            String cityName = weather.getBasic().getCityName();
+            String updateLocTime = weather.getBasic().getUpdate().getUpdateLocTime();//.split(" ")[1];
+            String degree = weather.getNow().getTemperature() + "℃";
+            String weatherInfo = weather.getNow().getMore().getInfo();
+            tv_title_city.setText(cityName);
+            tv_title_update_time.setText(updateLocTime);
+            tv_degree.setText(degree);
+            tv_weather_info.setText(weatherInfo);
+            // 3.移除 预报 布局中中所有 View ，重新建立
+            ll_forecast.removeAllViews();
+            // 4.预报板块
+            for (DailyForecastBean forecast : weather.getForecastList()) {
+                View view = LayoutInflater.from(this).inflate(R.layout.layout_sub_forecast, ll_forecast, false);
+                TextView tv_date = (TextView) view.findViewById(R.id.tv_date);
+                TextView tv_info = (TextView) view.findViewById(R.id.tv_info);
+                TextView tv_max = (TextView) view.findViewById(R.id.tv_max);
+                TextView tv_min = (TextView) view.findViewById(R.id.tv_min);
+                tv_date.setText(forecast.getDate());
+                tv_info.setText(forecast.getMore().getInfo());
+                tv_max.setText(forecast.getTemperature().getMax() + "℃");
+                tv_min.setText(forecast.getTemperature().getMin() + "℃");
+                ll_forecast.addView(view);
+            }
+            // 5.空气质量板块
+            if (weather.getAqi() != null) {
+                tv_aqi.setText(weather.getAqi().getCity().getAqi());
+                tv_pm25.setText(weather.getAqi().getCity().getPm25());
+            }
+            // 6.建议板块
+            String comfort = "舒适度：" + weather.getSuggestion().getComfort().getInfo();
+            String carWash = "洗车指数：" + weather.getSuggestion().getCarWash().getInfo();
+            String sport = "运动指数：" + weather.getSuggestion().getSport().getInfo();
+            tv_comfort.setText(comfort);
+            tv_car_wash.setText(carWash);
+            tv_sport.setText(sport);
+            sv_weather.setVisibility(View.VISIBLE);
+            // 7.开启自动更新服务
+            Intent intent = new Intent(this, AutoUpdateService.class);
+            startService(intent);
+        } else {
+            Toast.makeText(getApplicationContext(), "获取天气信息失败", Toast.LENGTH_SHORT).show();
         }
-        // 5.空气质量板块
-        if (weather.getAqi() != null) {
-            tv_aqi.setText(weather.getAqi().getCity().getAqi());
-            tv_pm25.setText(weather.getAqi().getCity().getPm25());
-        }
-        // 6.建议板块
-        String comfort = "舒适度：" + weather.getSuggestion().getComfort().getInfo();
-        String carWash = "洗车指数：" + weather.getSuggestion().getCarWash().getInfo();
-        String sport = "运动指数：" + weather.getSuggestion().getSport().getInfo();
-        tv_comfort.setText(comfort);
-        tv_car_wash.setText(carWash);
-        tv_sport.setText(sport);
-        sv_weather.setVisibility(View.VISIBLE);
     }
 }
